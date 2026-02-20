@@ -1,0 +1,12 @@
+[project]
+name = "ml-visualization-dashboard"
+version = "0.1.0"
+description = "Machine Learning Visualization Dashboard with Streamlit and FastAPI"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uv.workspace]
+members = ["backend", "frontend"]

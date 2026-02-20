@@ -1,6 +1,11 @@
 # 実装計画
 
-- [ ] 1. プロジェクト構造とuv環境のセットアップ
+- [x] 1. プロジェクト構造とuv環境のセットアップ
+
+
+
+
+
   - ルートディレクトリにpyproject.tomlを作成（モノレポ設定）
   - frontend/とbackend/のサブディレクトリを作成
   - 各サブディレクトリにpyproject.tomlを作成
@@ -8,27 +13,42 @@
   - .gitignoreファイルを作成
   - _要件: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 2. Docker環境のセットアップ
+- [x] 2. Docker環境のセットアップ
+
+
+
+
+
   - Docker Compose設定ファイルを作成（FastAPI、Streamlit、Redis、PostgreSQL）
   - backend/Dockerfileを作成（uvを使用した依存関係インストール）
   - frontend/Dockerfileを作成（uvを使用した依存関係インストール）
   - 環境変数テンプレートを作成（.env.example）
   - _要件: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 3. バックエンド基盤の実装
-- [ ] 3.1 環境変数設定とCORS設定の実装
+- [x] 3. バックエンド基盤の実装
+
+
+
+
+- [x] 3.1 環境変数設定とCORS設定の実装
+
+
   - backend/src/config.pyを実装（pydantic-settings使用）
   - 環境変数からCORS設定を読み込む機能を実装
   - backend/.env.exampleを作成（CORS設定含む）
   - _要件: 8.7_
 
-- [ ] 3.2 データモデルとスキーマの定義
+- [x] 3.2 データモデルとスキーマの定義
+
+
   - Pydanticモデルを実装（TrainingConfig、TrainingResult、ExperimentRecord）
   - PostgreSQLスキーマを定義（experiments テーブル）
   - カスタム例外クラスを実装（DatasetNotFoundError、ModelTrainingError、DatabaseError）
   - _要件: 5.1, 5.2_
 
-- [ ] 3.3 データベース接続とリポジトリの実装
+- [x] 3.3 データベース接続とリポジトリの実装
+
+
   - SQLAlchemyセットアップとセッション管理を実装
   - ExperimentRepositoryクラスを実装（save、get_all、clear操作）
   - データベース接続のリトライロジックを実装
