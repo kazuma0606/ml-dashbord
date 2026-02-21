@@ -6,6 +6,9 @@
 from .cache import CacheManager, get_cache_manager
 from .dataset_loader import DatasetLoader, Dataset
 from .data_preprocessor import DataPreprocessor
+from .model_factory import ModelFactory
+from .model_trainer import ModelTrainer
+from .metrics_calculator import MetricsCalculator
 
 __all__ = [
     "CacheManager",
@@ -13,4 +16,7 @@ __all__ = [
     "DatasetLoader",
     "Dataset",
     "DataPreprocessor",
+    "ModelFactory",
+    "ModelTrainer",
+    "MetricsCalculator",
 ]
