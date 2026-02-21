@@ -5,8 +5,10 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 from src.models.database import Base
+from src.services.cache import CacheManager
 
 
 @pytest.fixture(scope="session")
@@ -14,6 +16,25 @@ def postgres_container():
     """PostgreSQLテストコンテナ"""
     with PostgresContainer("postgres:15") as postgres:
         yield postgres
+
+
+@pytest.fixture(scope="session")
+def redis_container():
+    """Redisテストコンテナ"""
+    with RedisContainer("redis:7") as redis:
+        yield redis
+
+
+@pytest.fixture(scope="session")
+def test_cache_manager(redis_container):
+    """テスト用キャッシュマネージャー"""
+    # Redisコンテナの接続情報を取得
+    host = redis_container.get_container_host_ip()
+    port = redis_container.get_exposed_port(6379)
+    
+    cache_manager = CacheManager(host=host, port=int(port), db=0)
+    yield cache_manager
+    cache_manager.close()
 
 
 @pytest.fixture(scope="session")
