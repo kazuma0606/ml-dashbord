@@ -15,10 +15,10 @@ from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-from backend.src.main import app
-from backend.src.models.database import Base
-from backend.src.repositories.database import get_db
-from backend.src.services.cache import CacheManager, get_cache_manager
+from src.main import app
+from src.models.database import Base
+from src.repositories.database import get_db
+from src.services.cache import CacheManager, get_cache_manager
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +64,7 @@ def test_cache_manager(redis_container):
 def test_client(test_engine, test_cache_manager):
     """統合テスト用FastAPIクライアント"""
     # グローバルキャッシュマネージャーをリセット
-    import backend.src.services.cache as cache_module
+    import src.services.cache as cache_module
     cache_module._cache_manager = test_cache_manager
     
     # データベース依存関係をオーバーライド

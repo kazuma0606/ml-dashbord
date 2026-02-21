@@ -1,15 +1,23 @@
 """
 APIエンドポイントのテスト
 """
+import sys
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
-from backend.src.main import app
-from backend.src.repositories.database import Base, get_db
-from backend.src.models.database import Experiment
+# pickle互換性のためのモジュールパス設定
+# Datasetクラスがpickleで正しくデシリアライズできるようにする
+import src.services.dataset_loader
+sys.modules['backend.src.services.dataset_loader'] = src.services.dataset_loader
+sys.modules['backend.src.services'] = sys.modules['src.services']
+sys.modules['backend.src'] = sys.modules['src']
+
+from src.main import app
+from src.repositories.database import Base, get_db
+from src.models.database import Experiment
 
 
 # テスト用インメモリデータベース
@@ -34,6 +42,21 @@ def override_get_db():
 
 # FastAPIの依存関係をオーバーライド
 app.dependency_overrides[get_db] = override_get_db
+
+# キャッシュマネージャーをモックして無効化（外部Redis依存を回避）
+from src.services import cache as cache_module
+from unittest.mock import Mock
+
+# モックキャッシュマネージャーを作成
+mock_cache_manager = Mock()
+mock_cache_manager.generate_cache_key = lambda prefix, identifier: f"{prefix}:{identifier}"
+mock_cache_manager.get = Mock(return_value=None)  # 常にキャッシュミス
+mock_cache_manager.set = Mock(return_value=True)
+mock_cache_manager.exists = Mock(return_value=False)
+mock_cache_manager.client = Mock()
+
+# グローバルキャッシュマネージャーを置き換え
+cache_module._cache_manager = mock_cache_manager
 
 # テストクライアント（lifespanを無効化）
 client = TestClient(app, raise_server_exceptions=False)

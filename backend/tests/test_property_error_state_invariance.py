@@ -4,11 +4,18 @@
 **Feature: ml-visualization-dashboard, Property 9: エラー時の状態不変性**
 **検証: 要件 3.4**
 """
+import sys
 import pytest
 from fastapi.testclient import TestClient
 from hypothesis import given, strategies as st, settings
 
-from backend.src.main import app, trained_models
+# pickle互換性のためのモジュールパス設定
+import src.services.dataset_loader
+sys.modules['backend.src.services.dataset_loader'] = src.services.dataset_loader
+sys.modules['backend.src.services'] = sys.modules['src.services']
+sys.modules['backend.src'] = sys.modules['src']
+
+from src.main import app, trained_models
 
 
 # テストクライアント
