@@ -419,3 +419,135 @@ docker-compose restart backend
 ## ライセンス
 
 MIT
+
+
+## デプロイメント
+
+### AWS EC2 へのデプロイ（推奨）
+
+AWS EC2でDocker Composeを使用した簡単なデプロイ方法です。詳細は `AWS_EC2_DEPLOYMENT.md` を参照してください。
+
+#### クイックスタート
+
+1. **EC2インスタンスを作成**
+   - Ubuntu 22.04 LTS
+   - t3.medium 以上（2 vCPU, 4GB RAM）
+   - セキュリティグループでポート 22, 8000, 8501 を開放
+
+2. **EC2に接続してセットアップ**
+   ```bash
+   # EC2に接続
+   ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
+   
+   # リポジトリをクローン
+   git clone <your-repo-url> ml-dashboard
+   cd ml-dashboard
+   
+   # セットアップスクリプトを実行
+   chmod +x setup-ec2.sh
+   ./setup-ec2.sh
+   
+   # ログアウトして再ログイン（Dockerグループ変更を適用）
+   exit
+   ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
+   cd ml-dashboard
+   ```
+
+3. **環境変数を設定**
+   ```bash
+   # .envファイルを作成
+   cp .env.example .env
+   nano .env
+   
+   # PUBLIC_HOSTをEC2のパブリックIPに設定
+   # 例: PUBLIC_HOST=54.123.45.67
+   ```
+
+4. **アプリケーションを起動**
+   ```bash
+   # デプロイスクリプトを使用
+   chmod +x deploy.sh
+   ./deploy.sh start
+   
+   # または直接Docker Composeを使用
+   docker compose up -d
+   ```
+
+5. **アクセス**
+   - Frontend: `http://<EC2-PUBLIC-IP>:8501`
+   - Backend API: `http://<EC2-PUBLIC-IP>:8000/docs`
+
+#### 管理コマンド
+
+```bash
+# サービスの状態確認
+./deploy.sh status
+
+# ログの確認
+./deploy.sh logs
+
+# サービスの再起動
+./deploy.sh restart
+
+# アプリケーションの更新
+./deploy.sh update
+
+# データベースのバックアップ
+./deploy.sh backup
+```
+
+### Fly.io へのデプロイ
+
+Fly.ioは自動スケーリングとグローバルエッジネットワークを提供します。詳細は `FLY_IO_DEPLOYMENT.md` を参照してください。
+
+#### クイックスタート
+
+1. **Fly.io CLIをインストール**
+   ```bash
+   # Windows
+   powershell -Command "iwr https://fly.io/install.ps1 -useb | iex"
+   
+   # macOS/Linux
+   curl -L https://fly.io/install.sh | sh
+   ```
+
+2. **Fly.ioにログイン**
+   ```bash
+   flyctl auth login
+   ```
+
+3. **デプロイスクリプトを実行**
+   ```bash
+   chmod +x deploy-flyio.sh
+   ./deploy-flyio.sh full
+   ```
+
+4. **アクセス**
+   - Frontend: `https://<app-name>.fly.dev`
+   - Backend API: `https://<backend-app-name>.fly.dev/docs`
+
+#### 個別デプロイ
+
+```bash
+# データベースのセットアップ
+./deploy-flyio.sh setup-db
+
+# Backendのみデプロイ
+./deploy-flyio.sh deploy-backend
+
+# Frontendのみデプロイ
+./deploy-flyio.sh deploy-frontend
+
+# ステータス確認
+./deploy-flyio.sh status
+
+# ログ確認
+./deploy-flyio.sh logs backend
+```
+
+### その他のデプロイオプション
+
+- **Railway**: モノレポ対応、詳細は `RAILWAY_DEPLOYMENT.md` 参照
+- **Render.com**: Docker Composeをサポート
+- **Fly.io**: 複数コンテナのデプロイをサポート
+- **DigitalOcean App Platform**: Docker Composeをサポート
