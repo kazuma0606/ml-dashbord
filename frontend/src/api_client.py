@@ -5,7 +5,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from .config import settings
+from src.config import settings
 
 
 class MLAPIClient:

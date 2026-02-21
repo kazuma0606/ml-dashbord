@@ -3,11 +3,11 @@ import streamlit as st
 from typing import Optional, Dict, Any
 import time
 
-from .config import settings
-from .api_client import MLAPIClient
-from .components.sidebar import render_sidebar
-from .components.metrics import render_metrics_cards
-from .components.visualizations import (
+from src.config import settings
+from src.api_client import MLAPIClient
+from src.components.sidebar import render_sidebar
+from src.components.metrics import render_metrics_cards
+from src.components.visualizations import (
     render_data_preview,
     render_confusion_matrix,
     render_feature_importance,
