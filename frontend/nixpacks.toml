@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = [
+  "curl -LsSf https://astral.sh/uv/install.sh | sh",
+  "source $HOME/.cargo/env",
+  "uv sync"
+]
+
+[start]
+cmd = "uv run streamlit run src/app.py --server.port $PORT --server.address 0.0.0.0"
