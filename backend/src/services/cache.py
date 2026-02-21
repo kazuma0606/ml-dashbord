@@ -23,23 +23,17 @@ class CacheManager:
     
     def __init__(
         self,
-        host: str = None,
-        port: int = None,
-        db: int = None,
+        redis_url: str = None,
         max_retries: int = 3,
         retry_delay: float = 1.0
     ):
         """
         Args:
-            host: Redisホスト（デフォルト: settings.redis_host）
-            port: Redisポート（デフォルト: settings.redis_port）
-            db: Redisデータベース番号（デフォルト: settings.redis_db）
+            redis_url: Redis接続URL（デフォルト: settings.get_redis_url()）
             max_retries: 最大リトライ回数
             retry_delay: 初期リトライ遅延（秒）、指数バックオフで増加
         """
-        self.host = host or settings.redis_host
-        self.port = port or settings.redis_port
-        self.db = db or settings.redis_db
+        self.redis_url = redis_url or settings.get_redis_url()
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self._client: Optional[redis.Redis] = None
@@ -59,17 +53,16 @@ class CacheManager:
         
         for attempt in range(self.max_retries):
             try:
-                client = redis.Redis(
-                    host=self.host,
-                    port=self.port,
-                    db=self.db,
+                # Redis URLから接続（redis://またはrediss://をサポート）
+                client = redis.from_url(
+                    self.redis_url,
                     decode_responses=False,  # バイナリデータを扱うためFalse
                     socket_connect_timeout=5,
                     socket_timeout=5
                 )
                 # 接続テスト
                 client.ping()
-                logger.info(f"Redis接続成功: {self.host}:{self.port}")
+                logger.info(f"Redis接続成功: {self.redis_url.split('@')[0] if '@' in self.redis_url else self.redis_url.split('//')[1].split(':')[0]}")
                 return client
             except (RedisError, RedisConnectionError) as e:
                 last_error = e

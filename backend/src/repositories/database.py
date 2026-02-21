@@ -14,11 +14,10 @@ from ..models.exceptions import DatabaseError
 
 logger = logging.getLogger(__name__)
 
-# データベースURL構築
-DATABASE_URL = os.environ.get("DATABASE_URL") or (
-    f"postgresql://{settings.postgres_user}:{settings.postgres_password}"
-    f"@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
-)
+# データベースURL取得（DATABASE_URLまたは個別設定から）
+DATABASE_URL = settings.get_database_url()
+
+logger.info(f"データベース接続URL: {DATABASE_URL.split('@')[0]}@***")  # パスワードを隠す
 
 # エンジン作成
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
