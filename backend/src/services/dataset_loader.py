@@ -150,11 +150,25 @@ class DatasetLoader:
         """
         dataset = self.load_dataset(name)
         
+        # numpy型をPython native型に変換
+        def convert_numpy_types(obj):
+            """numpy型をPython native型に変換"""
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            else:
+                return obj
+        
         return {
             "name": dataset.name,
-            "n_samples": len(dataset.data),
-            "n_features": dataset.data.shape[1],
-            "n_classes": len(dataset.target_names),
-            "target_names": dataset.target_names,
-            "feature_names": dataset.feature_names
+            "n_samples": int(len(dataset.data)),
+            "n_features": int(dataset.data.shape[1]),
+            "n_classes": int(len(dataset.target_names)),
+            "target_names": convert_numpy_types(dataset.target_names),
+            "feature_names": convert_numpy_types(dataset.feature_names)
         }
