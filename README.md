@@ -423,131 +423,114 @@ MIT
 
 ## デプロイメント
 
-### AWS EC2 へのデプロイ（推奨）
+### Railway へのデプロイ（推奨）
 
-AWS EC2でDocker Composeを使用した簡単なデプロイ方法です。詳細は `AWS_EC2_DEPLOYMENT.md` を参照してください。
+Railwayはモノレポに対応したPaaSで、外部BaaS（Supabase/Upstash）と組み合わせることで無料枠を最大限活用できます。
+
+#### 本番環境
+
+- **Frontend**: https://ml-frontend-production-e413.up.railway.app
+- **Backend API**: https://ml-backend-production-217a.up.railway.app/docs
+
+#### 技術構成
+
+| 役割 | サービス | 備考 |
+|------|---------|------|
+| Frontend | Streamlit on Railway | ポート 8501 |
+| Backend | FastAPI on Railway | ポート 8080 |
+| Database | Supabase PostgreSQL | Session pooler使用 |
+| Cache | Upstash Redis | 無料枠 10,000コマンド/日 |
 
 #### クイックスタート
 
-1. **EC2インスタンスを作成**
-   - Ubuntu 22.04 LTS
-   - t3.medium 以上（2 vCPU, 4GB RAM）
-   - セキュリティグループでポート 22, 8000, 8501 を開放
-
-2. **EC2に接続してセットアップ**
+1. **外部サービスのセットアップ**
    ```bash
-   # EC2に接続
-   ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
+   # Supabase (https://supabase.com)
+   # → 新規プロジェクト作成
+   # → Settings → Database → Connection String (Session pooler)
    
-   # リポジトリをクローン
-   git clone <your-repo-url> ml-dashboard
-   cd ml-dashboard
-   
-   # セットアップスクリプトを実行
-   chmod +x setup-ec2.sh
-   ./setup-ec2.sh
-   
-   # ログアウトして再ログイン（Dockerグループ変更を適用）
-   exit
-   ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
-   cd ml-dashboard
+   # Upstash (https://upstash.com)
+   # → 新規Redisデータベース作成
+   # → Details → Connection URL
    ```
 
-3. **環境変数を設定**
-   ```bash
-   # .envファイルを作成
-   cp .env.example .env
-   nano .env
-   
-   # PUBLIC_HOSTをEC2のパブリックIPに設定
-   # 例: PUBLIC_HOST=54.123.45.67
-   ```
+2. **Railwayでバックエンドをデプロイ**
+   - New Project → Deploy from GitHub repo
+   - Root Directory: `backend`
+   - 環境変数:
+     ```
+     DATABASE_URL=postgresql://postgres.xxx@pooler.supabase.com:5432/postgres
+     REDIS_URL=redis://xxx.upstash.io:6379
+     PORT=8080
+     CORS_ORIGINS=*
+     ```
 
-4. **アプリケーションを起動**
-   ```bash
-   # デプロイスクリプトを使用
-   chmod +x deploy.sh
-   ./deploy.sh start
-   
-   # または直接Docker Composeを使用
-   docker compose up -d
-   ```
+3. **Railwayでフロントエンドをデプロイ**
+   - New → GitHub Repo (同じリポジトリ)
+   - Root Directory: `frontend`
+   - 環境変数:
+     ```
+     API_BASE_URL=https://[backend-domain].up.railway.app
+     STREAMLIT_SERVER_PORT=8501
+     STREAMLIT_SERVER_ADDRESS=0.0.0.0
+     ```
 
-5. **アクセス**
-   - Frontend: `http://<EC2-PUBLIC-IP>:8501`
-   - Backend API: `http://<EC2-PUBLIC-IP>:8000/docs`
+#### よくある問題と解決策
 
-#### 管理コマンド
+| エラー | 原因 | 解決策 |
+|--------|------|--------|
+| No start command found | Root Directory未設定 | `backend`/`frontend`を指定 |
+| localhost接続エラー | DATABASE_URL未設定 | 環境変数を確認 |
+| IPv6接続エラー | Supabase直接接続 | Session poolerに変更 |
+| 502 Bad Gateway | ポート不一致 | `PORT=8080`を明示 |
+| CORS エラー | オリジン未許可 | `CORS_ORIGINS=*`を設定 |
+
+詳細は `RAILWAY_DEPLOYMENT.md` を参照してください。
+
+### AWS EC2 へのデプロイ
+
+Docker Composeを使用した従来型のデプロイ方法です。詳細は `AWS_EC2_DEPLOYMENT.md` を参照してください。
 
 ```bash
-# サービスの状態確認
-./deploy.sh status
+# EC2セットアップ
+ssh -i your-key.pem ubuntu@<EC2-IP>
+git clone <repo-url> ml-dashboard && cd ml-dashboard
+chmod +x setup-ec2.sh && ./setup-ec2.sh
 
-# ログの確認
-./deploy.sh logs
-
-# サービスの再起動
-./deploy.sh restart
-
-# アプリケーションの更新
-./deploy.sh update
-
-# データベースのバックアップ
-./deploy.sh backup
+# デプロイ
+cp .env.example .env
+nano .env  # PUBLIC_HOSTを設定
+./deploy.sh start
 ```
+
+アクセス: `http://<EC2-IP>:8501`
 
 ### Fly.io へのデプロイ
 
-Fly.ioは自動スケーリングとグローバルエッジネットワークを提供します。詳細は `FLY_IO_DEPLOYMENT.md` を参照してください。
-
-#### クイックスタート
-
-1. **Fly.io CLIをインストール**
-   ```bash
-   # Windows
-   powershell -Command "iwr https://fly.io/install.ps1 -useb | iex"
-   
-   # macOS/Linux
-   curl -L https://fly.io/install.sh | sh
-   ```
-
-2. **Fly.ioにログイン**
-   ```bash
-   flyctl auth login
-   ```
-
-3. **デプロイスクリプトを実行**
-   ```bash
-   chmod +x deploy-flyio.sh
-   ./deploy-flyio.sh full
-   ```
-
-4. **アクセス**
-   - Frontend: `https://<app-name>.fly.dev`
-   - Backend API: `https://<backend-app-name>.fly.dev/docs`
-
-#### 個別デプロイ
+グローバルエッジネットワークを活用したデプロイです。詳細は `FLY_IO_DEPLOYMENT.md` を参照してください。
 
 ```bash
-# データベースのセットアップ
-./deploy-flyio.sh setup-db
+# Fly.io CLIインストール
+curl -L https://fly.io/install.sh | sh
 
-# Backendのみデプロイ
-./deploy-flyio.sh deploy-backend
-
-# Frontendのみデプロイ
-./deploy-flyio.sh deploy-frontend
-
-# ステータス確認
-./deploy-flyio.sh status
-
-# ログ確認
-./deploy-flyio.sh logs backend
+# デプロイ
+flyctl auth login
+chmod +x deploy-flyio.sh
+./deploy-flyio.sh full
 ```
 
-### その他のデプロイオプション
+### デプロイ方式の比較
 
-- **Railway**: モノレポ対応、詳細は `RAILWAY_DEPLOYMENT.md` 参照
-- **Render.com**: Docker Composeをサポート
-- **Fly.io**: 複数コンテナのデプロイをサポート
-- **DigitalOcean App Platform**: Docker Composeをサポート
+| 方式 | メリット | デメリット | コスト |
+|------|---------|-----------|--------|
+| **Railway + BaaS** | モノレポ対応、簡単、無料枠大 | 従量課金 | $5/月〜 |
+| **AWS EC2** | フルコントロール、安定 | 管理コスト高 | $10/月〜 |
+| **Fly.io** | グローバル配信、自動スケール | 設定複雑 | $5/月〜 |
+
+### デプロイ時の学び
+
+- **モノレポ対応**: PaaSではRoot Directory指定が重要
+- **環境変数**: `DATABASE_URL`を直接読む設計が柔軟性を高める
+- **ポート設定**: `$PORT`の展開タイミングに注意、Python側で`os.environ.get()`推奨
+- **データベース接続**: Supabaseは直接接続よりSession poolerが安定
+- **パッケージ管理**: `uv`は便利だが、PaaS環境では`requirements.txt`へのフォールバックが必要
