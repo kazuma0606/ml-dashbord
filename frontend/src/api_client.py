@@ -74,7 +74,8 @@ class MLAPIClient:
             List of dataset names
         """
         response = self._make_request("GET", "/api/datasets")
-        return response.json()
+        data = response.json()
+        return data.get("datasets", [])
     
     def get_dataset(self, dataset_name: str) -> Dict[str, Any]:
         """Get dataset details.
@@ -169,7 +170,8 @@ class MLAPIClient:
             List of experiment records
         """
         response = self._make_request("GET", "/api/experiments")
-        return response.json()
+        data = response.json()
+        return data.get("experiments", [])
     
     def clear_experiments(self) -> Dict[str, Any]:
         """Clear all experiment records.

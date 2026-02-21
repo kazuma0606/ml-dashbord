@@ -43,9 +43,11 @@ def render_sidebar(api_client) -> Dict[str, Any]:
     st.sidebar.subheader("Dataset")
     try:
         datasets = api_client.get_datasets()
+        # Extract dataset names from the list of dicts
+        dataset_options = [ds["name"] for ds in datasets]
         dataset_name = st.sidebar.selectbox(
             "Select Dataset",
-            options=datasets,
+            options=dataset_options,
             key="dataset_name"
         )
     except Exception as e:
